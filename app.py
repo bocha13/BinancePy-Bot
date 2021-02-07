@@ -1,4 +1,4 @@
-import config, json, numpy, talib, pprint
+import config, json, numpy, talib, pprint, csv
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
 from binance.enums import *
@@ -61,7 +61,7 @@ client = Client(config.API_KEY, config.API_SECRET)
 account_info = client.get_account()
 
 # retrieve last 14 candlesticks so we can start to mesure the RSI from the first closed candle
-last_14_klines = client.get_historical_klines(TRADE_SYMBOL, "1m", "15 minutes ago UTC", limit=15)
+last_14_klines = client.get_historical_klines(TRADE_SYMBOL, "5m", "12 hours ago UTC", limit=196)
 for close in last_14_klines:
   closes.append(float(close[4]))
 
@@ -123,14 +123,16 @@ def process_message(msg):
       if len(closes) > RSI_PERIOD:
         np_closes = numpy.array(closes)
         rsi = talib.RSI(np_closes, RSI_PERIOD)
-        print("all rsi calculated so far")
-        print(rsi)
+        # print("all rsi calculated so far")
+        # print(rsi)
         last_rsi = rsi[-1]
         print("the current rsi is {}".format(last_rsi))
 
         if (last_rsi > RSI_OVERBOUGHT):
           if in_position:
             print("OVERBOUGHT!! SELL!!")
+            with open("trades.csv", "a") as fd:
+              fd.write("sell price: {}".format(close))
             order_succeeded = order(SIDE_SELL, TRADE_QUANTITY, TRADE_SYMBOL)
             if order_succeeded:
               in_position = False
@@ -142,11 +144,13 @@ def process_message(msg):
             print("It is oversold, but you already own it.")
           else:
             print("OVERSOLD!! BUY!!")
+            with open("trades.csv", "a") as fd:
+              fd.write("buy price: {}".format(close))
             order_succeeded = order(SIDE_BUY, TRADE_QUANTITY, TRADE_SYMBOL)
             if order_succeeded:
               in_position = True
 
 
 bsm = BinanceSocketManager(client)
-conn_key = bsm.start_kline_socket(TRADE_SYMBOL, process_message, interval=KLINE_INTERVAL_1MINUTE)
+conn_key = bsm.start_kline_socket(TRADE_SYMBOL, process_message, interval=KLINE_INTERVAL_5MINUTE)
 bsm.start()
