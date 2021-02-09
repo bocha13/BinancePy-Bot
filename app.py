@@ -1,5 +1,4 @@
 import config, numpy, talib, csv
-import tulipy as ti
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
 from binance.enums import *
