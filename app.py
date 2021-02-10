@@ -161,11 +161,11 @@ def process_message(msg):
 
         if (insights[-1] == "sell" and len(np_closes) - intersections[-1] == 2):
           if in_position:
-            print("MACD CROSS BEARISH, SELL!")
-            print("sell price: {}".format(close))
-            if float(last_buy_price) * min_percentage_profit / 100 <= float(close):
+            if float(last_buy_price)*min_percentage_profit/100 + float(last_buy_price) <= float(close):
+              #print("MACD CROSS BEARISH, SELL!")
+              #print("sell price: {}".format(close))
               with open("trades.csv", "a") as fd:
-                fd.write("sell price: {}".format(close))
+                fd.write("sell price: {}\n".format(close))
               order_succeeded = order(SIDE_SELL, TRADE_QUANTITY, TRADE_SYMBOL)
               if order_succeeded:
                 in_position = False
@@ -176,11 +176,11 @@ def process_message(msg):
           if in_position:
             print("It is bullish, but you already own it.")
           else:
-            print("MACD BULLISH, BUY!!")
+            #print("MACD BULLISH, BUY!!")
             last_buy_price = float(close)
-            print("buy price: {}".format(close))
+            #print("buy price: {}".format(close))
             with open("trades.csv", "a") as fd:
-              fd.write("buy price: {}".format(close))
+              fd.write("buy price: {}\n".format(close))
             order_succeeded = order(SIDE_BUY, TRADE_QUANTITY, TRADE_SYMBOL)
             if order_succeeded:
               in_position = True
